@@ -38,6 +38,8 @@ I brainstormed several methods to compress the images and found that the best me
 - The baseline (naive method) of storing the one image would take 100,000 * 100,000 * 1 byte per pixel = 10GB of memory
 - We can improve the storage by using the `BitMatrixMethod` which uses only 1 bit to store pixel information. Therefore, 100,000 * 100,000 * 1 bit per pixel = 1.25GB
 - After running the RLE compression on the parasite image, the storage occupied is only **`520 kb`**. That is `0.0051%` of the baseline
+- The program took 1793 seconds to run on my machine using 100,000 * 100,000 as image size.
+- The memory occupied while running the program was 24,961 mb. `The objects are deleted after executing one pair of images to save space and avoid memory leaks before starting with a new pair of images.`
 - After running the sparse matrix compression on the veins image, the storage occupied is only `22.2 mb`. That is `0.22%` of the baseline. And these are only going to be of the cancer detected parasite which is less than 0.1% of total.
 
 > [!NOTE]
@@ -49,6 +51,9 @@ ________________________________________________________________________________
 Fake parasite generated.
 compressing...
 Saving the parasite image in data/parasite/parasite_1.tif
+Time occupied is 1793 seconds
+Memory occupied is 24,961 mb
+Saved parasite image size is 520kb
 __________________________________________________________________________________________
 Fake veins generated.
 Compressing the veins image...
