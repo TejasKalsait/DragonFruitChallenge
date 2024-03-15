@@ -4,6 +4,7 @@ Driver (Main) file.
 
 import numpy as np
 from PIL import Image
+import resource
 
 import random
 from tqdm import tqdm
@@ -26,14 +27,20 @@ if __name__ == '__main__':
     session = 1
 
     # Initialie the simulation for this session
-    simulate = Simulate(size = (10000, 10000), visualize = False, sess_num = session)
+    tock = time.time()
+    simulate = Simulate(size = (cfg.INPUT_SIZE, cfg.INPUT_SIZE), visualize = False, sess_num = session)
 
     # Generate fake parasite and fake veins to simulate. This will save the parasite image by default as a compressed .tif file
     parasite = simulate.generate_fake_parasite()
-    veins_all, veins_body = simulate.generate_fake_veins(has_cancer = True)
+    usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    print("Memory Occupied is", usage, "MB")
+    veins_all, veins_body = simulate.generate_fake_veins(has_cancer = False)
 
     # Calculate if the parasite has cancer or not
     overlap = simulate.calculate_overlap(parasite, veins_body)
+    tick = time.time()
+
+    print("Time taken to run is", tick-tock, "seconds.")
 
     print("-------- PART 1 RESULTS ---------")
 
@@ -45,6 +52,9 @@ if __name__ == '__main__':
 
     print("Overlap found to be", overlap)
 
+    usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    print("Memory Occupied is", usage, "MB")
+
     print("__________________________________________________________________________________________")
     
     # Deleting the object to free space 
@@ -53,24 +63,24 @@ if __name__ == '__main__':
     # _______________STEP 2____________________
     # Importing the saved image, decompressing it, and findind if the parasite has cancer or not
 
-    session = 2
+    # session = 2
 
-    simulate = Simulate(size = (10000, 10000), visualize = False, sess_num = session)
+    # simulate = Simulate(size = (10000, 10000), visualize = False, sess_num = session)
 
-    parasite = simulate.generate_fake_parasite()
-    veins_all, veins_body = simulate.generate_fake_veins(has_cancer = False)
+    # parasite = simulate.generate_fake_parasite()
+    # veins_all, veins_body = simulate.generate_fake_veins(has_cancer = True)
 
-    overlap = simulate.calculate_overlap(parasite, veins_body)
+    # overlap = simulate.calculate_overlap(parasite, veins_body)
 
-    print("-------- PART 2 RESULTS ---------")
+    # print("-------- PART 2 RESULTS ---------")
 
-    if overlap > cfg.CANCER_THRESHOLD:
-        print("!!!!The parasite", session, "has cancer. Saving the veins image.!!!!")
-        simulate.sparse_save(veins_all)
-    else:
-        print("No cancer detected in the parasite", session)
+    # if overlap > cfg.CANCER_THRESHOLD:
+    #     print("!!!!The parasite", session, "has cancer. Saving the veins image.!!!!")
+    #     simulate.sparse_save(veins_all)
+    # else:
+    #     print("No cancer detected in the parasite", session)
 
-    print("Overlap found to be", overlap)
-    print("__________________________________________________________________________________________")
+    # print("Overlap found to be", overlap)
+    # print("__________________________________________________________________________________________")
 
-    del simulate
+    # del simulate

@@ -3,6 +3,8 @@ This file contains the Simulate class which is responsible for generating fake p
 Every rule from DragonFruit.AI has been thought of and fulfilled.
 '''
 
+import concurrent.futures
+import itertools
 import config as cfg
 
 import matplotlib.pyplot as plt
@@ -20,6 +22,7 @@ import pickle
 
 import os
 import sys
+import time
 
 from tqdm import tqdm
 
@@ -89,8 +92,67 @@ class Simulate():
         #cv2.imwrite("uncompressed_image.jpg", self.compressed_parasite_img * 255)
         self.parasite_img = self.compressed_parasite_img
 
-        return self._rle_compress(self.compressed_parasite_img, is_parasite = True)
+        compress_tock = time.time()
+        temp_compressed = self._rle_compress(self.compressed_parasite_img, is_parasite = True)
+        compressed_tick = time.time()
 
+        print("Time to compress", compressed_tick - compress_tock, "seconds.")
+        
+        return temp_compressed
+
+    
+    # Compressing and saving the parasite information using Run Length Encoding
+    def _rle_compress(self, array, is_parasite = True): 
+        print("compressing..")
+        result = []
+        array = array.flatten()
+        curr_val = None
+        count = 0
+        i = 0
+        rows = self.size[0]
+        cols = self.size[1]
+
+        for val in tqdm(array):
+
+            if curr_val == None:
+
+                curr_val = val
+                count += 1
+            else:
+                if curr_val != val:
+                    result.append([curr_val, count])
+                    curr_val = val
+                    count = 1
+                else:
+                    if count < 255:
+                        count += 1
+                    else:
+                        result.append([curr_val, count])
+                        curr_val = val
+                        count = 1
+
+        result.append([curr_val, count])
+
+        self.rle_save(result)
+
+        return result
+    
+    # Get back the original image from the compressed image
+    def _rle_decompress(self, compressed_img):
+        print("Decompressing...")
+        decompressed_img = []
+        for item in compressed_img:
+            pixel_value, run_length = item
+            decompressed_img.extend([pixel_value] * run_length)
+        return np.array(decompressed_img, dtype=np.uint64).reshape(self.size)
+    
+    # Helper function to save the compressed parasite image as a .tif file  
+    def rle_save(self, compressed_img):
+        
+        print("Saving the parasite image in", cfg.DATA_DIR + '/parasite' + '/parasite_' + str(self.sess_num) +'.tif')
+        cv2.imwrite(cfg.DATA_DIR + '/parasite' + '/parasite_' + str(self.sess_num) +'.tif', np.array(compressed_img))
+        return
+    
     # Generates a veins image. has_cancer makes sure if we want to simulate a cancer parasite or non-cancer parasite
     def generate_fake_veins(self, has_cancer = False):
 
@@ -156,54 +218,6 @@ class Simulate():
 
         return self._sparse_compress(veins_img)
     
-    # Compressing and saving the parasite information using Run Length Encoding
-    def _rle_compress(self, array, is_parasite = True): 
-        print("compressing..")
-        result = []
-        array = array.flatten()
-        curr_val = None
-        count = 0
-
-        for val in tqdm(array):
-            if curr_val == None:
-
-                curr_val = val
-                count += 1
-            else:
-                if curr_val != val:
-                    result.append([curr_val, count])
-                    curr_val = val
-                    count = 1
-                else:
-                    if count < 255:
-                        count += 1
-                    else:
-                        result.append([curr_val, count])
-                        curr_val = val
-                        count = 1
-
-        result.append([curr_val, count])
-
-        self.rle_save(result)
-
-        return result
-    
-    # Get back the original image from the compressed image
-    def _rle_decompress(self, compressed_img):
-        print("Decompressing...")
-        decompressed_img = []
-        for item in compressed_img:
-            pixel_value, run_length = item
-            decompressed_img.extend([pixel_value] * run_length)
-        return np.array(decompressed_img, dtype=np.uint64).reshape(self.size)
-    
-    # Helper function to save the compressed parasite image as a .tif file
-    def rle_save(self, compressed_img):
-        
-        print("Saving the parasite image in", cfg.DATA_DIR + '/parasite' + '/parasite_' + str(self.sess_num) +'.tif')
-        cv2.imwrite(cfg.DATA_DIR + '/parasite' + '/parasite_' + str(self.sess_num) +'.tif', np.array(compressed_img))
-        return
-    
     # Function to compress 
     def _sparse_compress(self, array):
 
@@ -242,7 +256,10 @@ class Simulate():
     # Calculate if the parasite has cancer or not
     def calculate_overlap(self, parasite, veins_body_only):
         # we have already saved the information of veins that are strictly inside the body area. Hence we only need to divide.
+        print("Calculating overlap...")
+
         return len(veins_body_only) / self.parasite_area
+
             
         
 

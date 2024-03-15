@@ -10,6 +10,8 @@ COLLECTED_DIR = os.path.join(DATA_DIR, "veins")
 '''
 Data Information
 '''
+INPUT_SIZE = 100000
+
 MAX_ROWS = 100000
 MAX_COLS = 100000
 
